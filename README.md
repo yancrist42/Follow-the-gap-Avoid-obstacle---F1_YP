@@ -1,84 +1,123 @@
-# Controlador Reactivo "Follow the Gap" para F1Tenth en ROS 2
+# F1Tenth Autonomous Racing: Controlador Reactivo "Follow the Gap" con Telemetría y Trail Braking
 
-Este repositorio contiene la implementación de un controlador reactivo autónomo basado en el algoritmo **Follow the Gap**, diseñado para el simulador F1Tenth utilizando ROS 2 Humble. Además, incluye mapas personalizados (Circuito de Catalunya) con obstáculos estáticos para poner a prueba la evasión de colisiones y el tiempo de reacción.
+Este repositorio contiene una implementación avanzada del algoritmo clásico **Follow-the-Gap (FtG)** optimizada para pruebas de resistencia (*Endurance*) en el simulador **F1Tenth**, utilizando **ROS 2 Humble**. 
+
+El sistema combina navegación reactiva basada en LiDAR con un perfil de velocidad tipo *Trail Braking* y un módulo integrado de telemetría por odometría para el registro automático de tiempos por vuelta. Además, incluye mapas personalizados (Circuito de Catalunya) con obstáculos estáticos para poner a prueba la evasión de colisiones y el tiempo de reacción.
 
 *(Arrastra y suelta aquí un GIF o video corto de tu simulación funcionando)*
 
 ---
 
-## 1. Enfoque Teórico: Algoritmo Follow the Gap
+## 🏎️ 1. Arquitectura de Control y Enfoque Teórico
 
-El algoritmo **Follow the Gap** es un método de navegación reactiva que permite a un vehículo autónomo esquivar obstáculos en tiempo real sin depender de la planificación global o waypoints predefinidos. El proceso lógico que ejecuta el nodo iterativamente es el siguiente:
+Para lograr un equilibrio entre velocidad máxima en rectas y estabilidad absoluta en curvas cerradas (completando múltiples vueltas consecutivas sin colisiones a un promedio de ~42 segundos por vuelta), el controlador implementa los siguientes módulos:
 
-1. **Preprocesamiento del LiDAR:** Se reciben los datos del escáner láser y se filtran los valores infinitos o fuera de rango para evitar errores matemáticos.
-2. **Detección y Burbuja de Seguridad:** Se identifica el punto (obstáculo) más cercano al vehículo. Para evitar rozar las paredes, se establece un "radio" de seguridad alrededor de este punto (burbuja) y se asume temporalmente que esa zona es de distancia cero.
-3. **Identificación del Hueco (Gap):** El algoritmo busca la secuencia consecutiva más larga de rayos libres (distancias no nulas) en el campo de visión.
-4. **Selección del Objetivo:** Dentro del hueco más grande encontrado, se identifica el punto más lejano y se calcula el ángulo hacia esa dirección segura.
-5. **Control Cinemático:** Se determina la dirección final de las ruedas y se ajusta la velocidad longitudinal dinámicamente en función del ángulo de giro (más lento en curvas cerradas, más rápido en rectas).
+1. **Preprocesamiento y Campo de Visión (FoV Filtering):** 
+   * Se recorta la nube de puntos del LiDAR en un rango frontal estricto de **-70° a +70°** para evitar el "secuestro de burbuja" causado por las paredes laterales cercanas.
+   * Se aplica un límite superior de distancia (`np.clip` a **3.9 metros**) para evitar que el algoritmo intente anticipar salidas lejanas y corte los vértices internos de forma prematura (*corner-cutting*).
 
----
+2. **Evasión de Obstáculos por Burbuja de Seguridad:**
+   * Se identifica el punto más cercano al vehículo y se "infla" una burbuja de seguridad con un radio dinámico de **`0.60 metros`**, cegando temporalmente esos puntos para forzar al coche a buscar la brecha (*gap*) más amplia de espacio libre.
 
-## 2. Estructura del Código
+3. **Control de Velocidad por Trail Braking Escalonado:**
+   * En lugar de frenar de golpe (lo que genera sobreviraje o trompos), el sistema utiliza la lectura promediada de los rayos láser frontales para aplicar una desaceleración gradual (escalones de 14.0 m/s $\rightarrow$ 9.5 m/s $\rightarrow$ 7.5 m/s $\rightarrow$ 6.0 m/s) al acercarse a una curva u obstáculo.
+   * La velocidad en curva está acoplada directamente al ángulo de dirección (`steering_angle`), garantizando tracción óptima en arcos amplios y cerrados.
 
-El núcleo funcional del controlador reside en el archivo `gap_node.py`. Este script define un nodo de ROS 2 (`gap_node`) que interactúa directamente con el motor de físicas de la simulación mediante:
-
-* **Suscripción (`/scan`):** 
-  * Tipo de mensaje: `sensor_msgs/msg/LaserScan`
-  * Función: Recibe las lecturas del entorno a 270 grados y alimenta la función de callback principal.
-* **Publicación (`/drive`):** 
-  * Tipo de mensaje: `ackermann_msgs/msg/AckermannDriveStamped`
-  * Función: Envía los comandos calculados de aceleración (`speed`) y ángulo de dirección (`steering_angle`) a los actuadores del simulador.
+4. **Sistema de Telemetría por Odometría (`/ego_racecar/odom`):**
+   * Un submódulo independiente captura la posición bidimensional del vehículo al arrancar, registra ese punto como la línea de meta y calcula con precisión el tiempo transcurrido por vuelta, imprimiendo resultados limpios en la consola de la terminal.
 
 ---
 
-## 3. Guía de Instalación y Uso
+## 📂 2. Estructura del Código
 
-> **Nota:** Estas instrucciones asumen que ya tienes instalado ROS 2 Humble y posees el simulador base `f1tenth_gym_ros` compilado en tu propio espacio de trabajo (*workspace*).
+El núcleo funcional del controlador reside en el archivo `gap_node.py`. Este script define la clase `ReactiveFollowGap`, un nodo de ROS 2 que interactúa con el motor de físicas mediante:
 
-### 3.1. Clonar el Controlador
-Abre una terminal, dirígete a la carpeta `src` de tu espacio de trabajo y clona este repositorio para integrarlo con tu simulador:
+* **Suscriptores:**
+  * `/scan` (`sensor_msgs/msg/LaserScan`): Recibe las lecturas del entorno a 270 grados y alimenta la función `lidar_callback`.
+  * `/ego_racecar/odom` (`nav_msgs/msg/Odometry`): Rastrea la posición espacial a través de la función `odom_callback` para el cronometraje de vueltas.
+* **Publicador:**
+  * `/drive` (`ackermann_msgs/msg/AckermannDriveStamped`): Envía los comandos calculados de aceleración y ángulo de dirección a los actuadores del simulador.
+* **Funciones Clave:**
+  * `preprocess_lidar`: Filtra los ángulos muertos y recorta el rango efectivo.
+  * `find_max_gap` & `find_best_point`: Analizan la matriz de espacio libre para determinar la trayectoria.
+
+---
+
+## 🛠️ 3. Guía de Instalación y Uso (Desde Cero)
+
+Esta guía detalla los pasos para instalar el simulador base de F1Tenth desde cero, integrar este controlador reactivo y ejecutar la simulación en el mapa personalizado de Catalunya.
+
+### 3.1. Requisitos Previos
+* Sistema Operativo: Ubuntu 22.04
+* ROS 2 Humble instalado y configurado (`source /opt/ros/humble/setup.bash`).
+* Python 3 y herramientas de compilación de ROS (`colcon`, `rosdep`).
+
+### 3.2. Crear el Entorno e Instalar el Simulador Base
+Abre una terminal e instala la librería del motor de físicas del simulador. Luego, crea un nuevo espacio de trabajo (*workspace*) y clona el repositorio oficial de F1Tenth:
+
 ```bash
-cd ~/tu_espacio_de_trabajo/src
+# Instalar el motor de físicas de Python
+pip3 install f1tenth-gym
+
+# Crear el espacio de trabajo
+mkdir -p ~/f1tenth_ws/src
+cd ~/f1tenth_ws/src
+
+# Clonar el simulador oficial de F1Tenth para ROS 2
+git clone https://github.com/f1tenth/f1tenth_gym_ros.git
+```
+
+### 3.3. Clonar este Controlador Reactivo
+En la misma carpeta `src`, clona este repositorio para agregar el código del algoritmo *Follow the Gap* y los mapas personalizados:
+```bash
+cd ~/f1tenth_ws/src
 git clone https://github.com/tu_usuario/Follow-the-gap-Avoid-obstacle---F1_YP.git
 ```
 
-### 3.2. Configurar el Mapa Personalizado
-Para probar la evasión de colisiones, debes integrar los mapas de este repositorio al simulador base:
-1. Copia los archivos `Catalunya_map.png` y `Catalunya_Obstacle.yaml` desde la carpeta `maps/` de este repositorio hacia la carpeta de tu simulador: `.../src/f1tenth_gym_ros/maps/`.
-2. Abre el archivo de configuración `sim.yaml` (en la carpeta `config/` del simulador) y modifica la ruta del mapa para que cargue el circuito con obstáculos:
-   ```yaml
-   map_path: '/home/tu_usuario/tu_espacio_de_trabajo/src/f1tenth_gym_ros/maps/Catalunya_Obstacle'
+### 3.4. Configurar el Mapa Personalizado
+Para que el simulador reconozca los obstáculos, debemos trasladar los mapas al paquete principal:
+1. Copia los archivos del circuito de Catalunya mediante la terminal:
+   ```bash
+   cp ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/maps/Catalunya* ~/f1tenth_ws/src/f1tenth_gym_ros/maps/
    ```
-   *(Asegúrate de no incluir las extensiones .png o .yaml al final de la ruta).*
+2. Edita el archivo de configuración del simulador para que cargue la nueva pista. Abre `~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml` y cambia la ruta de `map_path` a la siguiente:
+   ```yaml
+   map_path: '/home/TU_USUARIO/f1tenth_ws/src/f1tenth_gym_ros/maps/Catalunya_Obstacle'
+   ```
+   *(Asegúrate de reemplazar `TU_USUARIO` por tu nombre de usuario de Ubuntu. No incluyas las extensiones .png o .yaml al final de la ruta).*
 
-### 3.3. Compilar el Espacio de Trabajo
-Regresa a la raíz de tu espacio de trabajo y compila el entorno para registrar el nuevo paquete de controladores:
+### 3.5. Instalar Dependencias y Compilar
+Regresa a la raíz de tu espacio de trabajo, resuelve las dependencias de ROS 2 y compila el entorno:
 ```bash
-cd ~/tu_espacio_de_trabajo
+cd ~/f1tenth_ws
+rosdep install -i --from-path src --rosdistro humble -y
 colcon build --symlink-install
 source install/setup.bash
 ```
 
-### 3.4. Ejecución del Nodo
-Primero, lanza el entorno de simulación. Esto abrirá RViz mostrando el mapa físico con los muros:
+### 3.6. Ejecución de la Simulación
+Primero, lanza el entorno gráfico. Esto abrirá RViz mostrando la pista y los muros físicos:
 ```bash
 ros2 launch f1tenth_gym_ros gym_bridge_launch.py
 ```
 
-Abre una **nueva terminal** (dejando la anterior en ejecución), carga las variables de entorno de ROS 2 y ejecuta tu controlador reactivo:
+Abre una **nueva terminal** (dejando la anterior en ejecución), carga las variables de entorno de ROS 2 y ejecuta el controlador reactivo:
 ```bash
-source ~/tu_espacio_de_trabajo/install/setup.bash
-cd ~/tu_espacio_de_trabajo/src/Follow-the-gap-Avoid-obstacle---F1_YP/src/controllers/controllers
+source ~/f1tenth_ws/install/setup.bash
+cd ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/src/controllers/controllers
 python3 gap_node.py
 ```
-El vehículo comenzará a procesar los datos del LiDAR y se moverá de forma autónoma evadiendo los obstáculos de la pista.
+Verás que el vehículo comienza a procesar los datos del escáner láser, esquivando los obstáculos de la pista, mientras la terminal imprime los tiempos limpios de cada vuelta completada.
 
 ---
 
-## 4. Parámetros Ajustables (Tuning)
+## 📊 4. Parámetros de Calibración Clave (Tuning)
 
 Si deseas probar el controlador en otras pistas o modificar la agresividad de la conducción, puedes ajustar las siguientes variables críticas directamente dentro del script `gap_node.py`:
 
-* **Velocidad de Desplazamiento (`velocity`):** Se encuentra en la sección final de cálculo. Un valor entre `1.0` y `2.0` m/s es seguro. Si excedes el límite físico, el coche podría no frenar a tiempo debido a la latencia natural de respuesta.
-* **Radio de la Burbuja de Seguridad:** Determina cuántos índices del arreglo del LiDAR adyacentes al obstáculo más cercano se igualarán a cero. Un radio mayor genera sobreviraje para alejarse excesivamente de las paredes; un radio pequeño permite carreras ajustadas pero aumenta el riesgo de colisión frontal.
-* **Campo de Visión Útil:** Se recomienda delimitar la lectura del arreglo del LiDAR a los ángulos frontales (ej. -90° a +90°) descartando las lecturas traseras. Esto previene que el coche retroceda o gire erráticamente al detectar espacios libres a sus espaldas.
+| Parámetro | Valor Óptimo | Descripción Técnica |
+| :--- | :--- | :--- |
+| **`bubble_radius`** | `0.60 m` | Radio de seguridad para aislar obstáculos críticos y evitar colisiones frontales o raspones laterales con los muros. |
+| **`np.clip` (LiDAR)** | `3.9 m` | Distancia máxima de visión para prevenir cortes de vértice (*corner-cutting*) y forzar al coche a mantenerse centrado. |
+| **Velocidad Recta** | `14.0 m/s` | Velocidad máxima en rectas largas con tracción despejada. El sistema la escalona automáticamente usando *Trail Braking*. |
+| **Campo de Visión** | `±70°` | Ángulo de apertura útil del LiDAR. Ignora los muros laterales y traseros para evitar que el coche tome decisiones erráticas. |
