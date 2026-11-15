@@ -1,12 +1,10 @@
 # F1Tenth Autonomous Racing: Controlador Reactivo "Follow the Gap" con Telemetría y Trail Braking
 
-Este repositorio contiene una implementación avanzada del algoritmo clásico **Follow-the-Gap (FtG)** optimizada para pruebas de resistencia (*Endurance*) en el simulador **F1Tenth**, utilizando **ROS 2 Humble**. 
+Este repositorio contiene una implementación avanzada del algoritmo clásico **Follow-the-Gap (FtG)** optimizada para pruebas de resistencia (*Endurance*) en el simulador **F1Tenth**, utilizando **ROS 2 Humble**.
 
 El sistema combina navegación reactiva basada en LiDAR con un perfil de velocidad tipo *Trail Braking* y un módulo integrado de telemetría por odometría para el registro automático de tiempos por vuelta. Además, incluye mapas personalizados (Circuito de Catalunya) con obstáculos estáticos para poner a prueba la evasión de colisiones y el tiempo de reacción.
 
 *(Arrastra y suelta aquí un GIF o video corto de tu simulación funcionando)*
-
----
 
 ## 1. Arquitectura de Control y Enfoque Teórico
 
@@ -26,8 +24,6 @@ Para lograr un equilibrio entre velocidad máxima en rectas y estabilidad absolu
 4. **Sistema de Telemetría por Odometría (`/ego_racecar/odom`):**
    * Un submódulo independiente captura la posición bidimensional del vehículo al arrancar, registra ese punto como la línea de meta y calcula con precisión el tiempo transcurrido por vuelta, imprimiendo resultados limpios en la consola de la terminal.
 
----
-
 ## 2. Estructura del Código
 
 El núcleo funcional del controlador reside en el archivo `gap_node.py`. Este script define la clase `ReactiveFollowGap`, un nodo de ROS 2 que interactúa con el motor de físicas mediante:
@@ -41,8 +37,6 @@ El núcleo funcional del controlador reside en el archivo `gap_node.py`. Este sc
   * `preprocess_lidar`: Filtra los ángulos muertos y recorta el rango efectivo.
   * `find_max_gap` & `find_best_point`: Analizan la matriz de espacio libre para determinar la trayectoria.
 
----
-
 ## 3. Guía de Instalación y Uso (Desde Cero)
 
 Esta guía detalla los pasos verificados para instalar el simulador base de F1Tenth desde cero en un entorno limpio, integrar este controlador reactivo y ejecutar la simulación en el mapa personalizado de Catalunya.
@@ -50,42 +44,49 @@ Esta guía detalla los pasos verificados para instalar el simulador base de F1Te
 ### 3.1. Requisitos Previos
 * **Sistema Operativo:** Ubuntu 22.04 LTS
 * **Middleware:** ROS 2 Humble instalado (`source /opt/ros/humble/setup.bash`).
-* **Herramientas base:** Ejecuta el siguiente bloque para asegurar que tienes `pip`, `colcon` y `rosdep` listos:
-  ```bash
-  sudo apt update
-  sudo apt install -y python3-pip python3-colcon-common-extensions python3-rosdep git
-  sudo rosdep init 2>/dev/null || true
-  rosdep update
-  ```
-
-### 3.2. Instalar el Motor de Físicas (`f1tenth_gym`) y Crear el Workspace
-> **Nota importante:** Se debe utilizar la rama `v0.2` (compatible con ROS 2 Humble) y mantener `numpy<2.0` para evitar conflictos de compatibilidad con `numba` y `transforms3d`.
+* **Herramientas base:** Ejecuta el siguiente bloque para instalar `pip`, `colcon` y `rosdep2` sin conflictos de configuración:
 
 ```bash
-# 1. Clonar e instalar la versión compatible del motor de físicas
-cd ~
-git clone -b v0.2 https://github.com/f1tenth/f1tenth_gym.git
-cd f1tenth_gym
-pip3 install "numpy<2.0" transforms3d
-pip3 install -e gym/
+sudo apt update
+sudo apt install -y python3-pip python3-colcon-common-extensions python3-rosdep2 git
+rosdep update
+```
 
-# 2. Crear el espacio de trabajo de ROS 2
+### 3.2. Instalar el Motor de Físicas (`f1tenth_gym`) y Crear el Workspace
+Este bloque verifica si ya existe una instalación previa del motor de físicas para evitar errores de carpeta existente, instala las dependencias compatibles (`numpy<2.0`) y prepara el espacio de trabajo de ROS 2:
+
+```bash
+# 1. Clonar (si no existe) e instalar el motor de físicas en modo editable desde la raíz
+cd ~
+if [ ! -d "f1tenth_gym" ]; then
+  git clone https://github.com/f1tenth/f1tenth_gym.git
+fi
+cd ~/f1tenth_gym
+pip3 install "numpy<2.0" transforms3d
+pip3 install -e .
+
+# 2. Crear el espacio de trabajo de ROS 2 y clonar el puente oficial
 mkdir -p ~/f1tenth_ws/src
 cd ~/f1tenth_ws/src
-
-# 3. Clonar el puente del simulador oficial para ROS 2
-git clone https://github.com/f1tenth/f1tenth_gym_ros.git
+if [ ! -d "f1tenth_gym_ros" ]; then
+  git clone https://github.com/f1tenth/f1tenth_gym_ros.git
+fi
 ```
 
 ### 3.3. Clonar este Controlador Reactivo
 En la misma carpeta `src` de tu workspace, clona este repositorio para agregar el algoritmo *Follow the Gap* y los mapas personalizados:
+
 ```bash
 cd ~/f1tenth_ws/src
-git clone https://github.com/yancrist42/Follow-the-gap-Avoid-obstacle---F1_YP.git
+if [ ! -d "Follow-the-gap-Avoid-obstacle---F1_YP" ]; then
+  git clone https://github.com/yancrist42/Follow-the-gap-Avoid-obstacle---F1_YP.git
+else
+  cd Follow-the-gap-Avoid-obstacle---F1_YP && git pull origin main
+fi
 ```
 
 ### 3.4. Configurar el Mapa Personalizado
-Traslada los archivos del circuito de Catalunya al paquete del simulador y actualiza automáticamente la ruta en `sim.yaml`:
+Traslada los archivos del circuito de Catalunya al paquete del simulador y actualiza automáticamente la ruta y el formato de imagen en `sim.yaml`:
 
 ```bash
 # 1. Copiar los archivos del mapa (.png y .yaml)
@@ -95,7 +96,7 @@ cp ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/maps/Catalunya* ~/f1te
 sed -i "s|map_path:.*|map_path: '/home/$USER/f1tenth_ws/src/f1tenth_gym_ros/maps/Catalunya_Obstacle'|g" ~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml
 sed -i "s|map_img_ext:.*|map_img_ext: '.png'|g" ~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml
 ```
-*(Verifica opcionalmente que en `sim.yaml` las coordenadas iniciales `sx` y `sy` correspondan a una zona despejada de la pista).*
+*(Nota: Si al iniciar la simulación el vehículo aparece fuera de la pista, ajusta las coordenadas iniciales `sx`, `sy` y `stheta` dentro de `~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml`).*
 
 ### 3.5. Instalar Dependencias de ROS 2 y Compilar
 Regresa a la raíz de tu espacio de trabajo, instala las dependencias omitiendo la clave obsoleta `python-transforms3d-pip` (ya instalada vía `pip` en el paso 3.2) y compila:
@@ -109,12 +110,14 @@ source install/setup.bash
 ```
 
 ### 3.6. Ejecución de la Simulación
+
 1. **Terminal 1 (Simulador y RViz):** Lanza el entorno gráfico y el puente de físicas:
    ```bash
    source /opt/ros/humble/setup.bash
    source ~/f1tenth_ws/install/setup.bash
    ros2 launch f1tenth_gym_ros gym_bridge_launch.py
    ```
+
 2. **Terminal 2 (Controlador Reactivo):** Abre una nueva terminal, carga el entorno y ejecuta el nodo:
    ```bash
    source /opt/ros/humble/setup.bash
@@ -125,7 +128,14 @@ source install/setup.bash
 
 Verás que el vehículo comienza a procesar los datos del escáner láser, esquivando los obstáculos de la pista, mientras la terminal imprime los tiempos limpios de cada vuelta completada.
 
----
+### 3.7. Solución de Problemas Comunes (Troubleshooting)
+* **Error al lanzar `gym_bridge_launch.py` relacionado con `coverage`:** En algunas instalaciones de Ubuntu 22.04 la librería `coverage` genera conflicto con el entorno de simulación. Si ocurre, desinstálala y recompila:
+  ```bash
+  pip3 uninstall -y coverage
+  sudo apt purge -y python3-coverage
+  cd ~/f1tenth_ws && rm -rf build/ install/ log/
+  colcon build --symlink-install
+  ```
 
 ## 4. Parámetros de Calibración Clave (Tuning)
 
