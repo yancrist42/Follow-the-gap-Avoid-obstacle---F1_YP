@@ -56,21 +56,18 @@ rosdep update
 Este bloque verifica si ya existe una instalación previa del motor de físicas para evitar errores de carpeta existente, instala las dependencias compatibles (`numpy<2.0`) y prepara el espacio de trabajo de ROS 2:
 
 ```bash
-# 1. Clonar (si no existe) e instalar el motor de físicas en modo editable desde la raíz
+# 1. Clonar e instalar el motor de físicas oficial
 cd ~
-if [ ! -d "f1tenth_gym" ]; then
-  git clone https://github.com/f1tenth/f1tenth_gym.git
-fi
+git clone https://github.com/f1tenth/f1tenth_gym.git
 cd ~/f1tenth_gym
 pip3 install "numpy<2.0" transforms3d
 pip3 install -e .
 
-# 2. Crear el espacio de trabajo de ROS 2 y clonar el puente oficial
+# 2. Crear el espacio de trabajo de ROS 2 y clonar el simulador base
 mkdir -p ~/f1tenth_ws/src
 cd ~/f1tenth_ws/src
-if [ ! -d "f1tenth_gym_ros" ]; then
-  git clone https://github.com/f1tenth/f1tenth_gym_ros.git
-fi
+git clone https://github.com/f1tenth/f1tenth_gym_ros.git
+
 ```
 
 ### 3.3. Clonar este Controlador Reactivo
@@ -78,10 +75,7 @@ En la misma carpeta `src` de tu workspace, clona este repositorio para agregar e
 
 ```bash
 cd ~/f1tenth_ws/src
-if [ ! -d "Follow-the-gap-Avoid-obstacle---F1_YP" ]; then
-  git clone https://github.com/yancrist42/Follow-the-gap-Avoid-obstacle---F1_YP.git
-else
-  cd Follow-the-gap-Avoid-obstacle---F1_YP && git pull origin main
+git clone https://github.com/yancrist42/Follow-the-gap-Avoid-obstacle---F1_YP.git
 fi
 ```
 
