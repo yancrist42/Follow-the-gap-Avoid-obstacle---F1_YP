@@ -76,7 +76,6 @@ En la misma carpeta `src` de tu workspace, clona este repositorio para agregar e
 ```bash
 cd ~/f1tenth_ws/src
 git clone https://github.com/yancrist42/Follow-the-gap-Avoid-obstacle---F1_YP.git
-fi
 ```
 
 ### 3.4. Configurar el Mapa Personalizado
@@ -87,7 +86,7 @@ Traslada los archivos del circuito de Catalunya al paquete del simulador y actua
 cp ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/maps/Catalunya* ~/f1tenth_ws/src/f1tenth_gym_ros/maps/
 
 # 2. Configurar automáticamente map_path y la extensión .png en sim.yaml
-sed -i "s|map_path:.*|map_path: '/home/$USER/f1tenth_ws/src/f1tenth_gym_ros/maps/Catalunya_Obstacle'|g" ~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml
+sed -i "s|map_path:.*|map_path: '/home/$USER/f1tenth_ws/src/f1tenth_gym_ros/maps/Catalunya_map'|g" ~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml
 sed -i "s|map_img_ext:.*|map_img_ext: '.png'|g" ~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml
 ```
 *(Nota: Si al iniciar la simulación el vehículo aparece fuera de la pista, ajusta las coordenadas iniciales `sx`, `sy` y `stheta` dentro de `~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml`).*
