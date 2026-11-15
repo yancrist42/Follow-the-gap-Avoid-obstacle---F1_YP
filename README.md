@@ -8,11 +8,11 @@ El sistema combina navegación reactiva basada en LiDAR con un perfil de velocid
 
 ---
 
-## 🏎️ 1. Arquitectura de Control y Enfoque Teórico
+## 1. Arquitectura de Control y Enfoque Teórico
 
 Para lograr un equilibrio entre velocidad máxima en rectas y estabilidad absoluta en curvas cerradas (completando múltiples vueltas consecutivas sin colisiones a un promedio de ~42 segundos por vuelta), el controlador implementa los siguientes módulos:
 
-1. **Preprocesamiento y Campo de Visión (FoV Filtering):** 
+1. **Preprocesamiento y Campo de Visión (FoV Filtering):**
    * Se recorta la nube de puntos del LiDAR en un rango frontal estricto de **-70° a +70°** para evitar el "secuestro de burbuja" causado por las paredes laterales cercanas.
    * Se aplica un límite superior de distancia (`np.clip` a **3.9 metros**) para evitar que el algoritmo intente anticipar salidas lejanas y corte los vértices internos de forma prematura (*corner-cutting*).
 
@@ -28,12 +28,12 @@ Para lograr un equilibrio entre velocidad máxima en rectas y estabilidad absolu
 
 ---
 
-## 📂 2. Estructura del Código
+## 2. Estructura del Código
 
 El núcleo funcional del controlador reside en el archivo `gap_node.py`. Este script define la clase `ReactiveFollowGap`, un nodo de ROS 2 que interactúa con el motor de físicas mediante:
 
 * **Suscriptores:**
-  * `/scan` (`sensor_msgs/msg/LaserScan`): Recibe las lecturas del entorno a 270 grados y alimenta la función `lidar_callback`.
+  * `/scan` (`sensor_msgs/msg/LaserScan`): Recibe las lecturas del entorno y alimenta la función `lidar_callback`.
   * `/ego_racecar/odom` (`nav_msgs/msg/Odometry`): Rastrea la posición espacial a través de la función `odom_callback` para el cronometraje de vueltas.
 * **Publicador:**
   * `/drive` (`ackermann_msgs/msg/AckermannDriveStamped`): Envía los comandos calculados de aceleración y ángulo de dirección a los actuadores del simulador.
@@ -43,75 +43,91 @@ El núcleo funcional del controlador reside en el archivo `gap_node.py`. Este sc
 
 ---
 
-## 🛠️ 3. Guía de Instalación y Uso (Desde Cero)
+## 3. Guía de Instalación y Uso (Desde Cero)
 
-Esta guía detalla los pasos para instalar el simulador base de F1Tenth desde cero, integrar este controlador reactivo y ejecutar la simulación en el mapa personalizado de Catalunya.
+Esta guía detalla los pasos verificados para instalar el simulador base de F1Tenth desde cero en un entorno limpio, integrar este controlador reactivo y ejecutar la simulación en el mapa personalizado de Catalunya.
 
 ### 3.1. Requisitos Previos
-* Sistema Operativo: Ubuntu 22.04
-* ROS 2 Humble instalado y configurado (`source /opt/ros/humble/setup.bash`).
-* Python 3 y herramientas de compilación de ROS (`colcon`, `rosdep`).
+* **Sistema Operativo:** Ubuntu 22.04 LTS
+* **Middleware:** ROS 2 Humble instalado (`source /opt/ros/humble/setup.bash`).
+* **Herramientas base:** Ejecuta el siguiente bloque para asegurar que tienes `pip`, `colcon` y `rosdep` listos:
+  ```bash
+  sudo apt update
+  sudo apt install -y python3-pip python3-colcon-common-extensions python3-rosdep git
+  sudo rosdep init 2>/dev/null || true
+  rosdep update
+  ```
 
-### 3.2. Crear el Entorno e Instalar el Simulador Base
-Abre una terminal e instala la librería del motor de físicas del simulador. Luego, crea un nuevo espacio de trabajo (*workspace*) y clona el repositorio oficial de F1Tenth:
+### 3.2. Instalar el Motor de Físicas (`f1tenth_gym`) y Crear el Workspace
+> **Nota importante:** Se debe utilizar la rama `v0.2` (compatible con ROS 2 Humble) y mantener `numpy<2.0` para evitar conflictos de compatibilidad con `numba` y `transforms3d`.
 
 ```bash
-# Instalar el motor de físicas de Python
-pip3 install f1tenth-gym
+# 1. Clonar e instalar la versión compatible del motor de físicas
+cd ~
+git clone -b v0.2 https://github.com/f1tenth/f1tenth_gym.git
+cd f1tenth_gym
+pip3 install "numpy<2.0" transforms3d
+pip3 install -e gym/
 
-# Crear el espacio de trabajo
+# 2. Crear el espacio de trabajo de ROS 2
 mkdir -p ~/f1tenth_ws/src
 cd ~/f1tenth_ws/src
 
-# Clonar el simulador oficial de F1Tenth para ROS 2
+# 3. Clonar el puente del simulador oficial para ROS 2
 git clone https://github.com/f1tenth/f1tenth_gym_ros.git
 ```
 
 ### 3.3. Clonar este Controlador Reactivo
-En la misma carpeta `src`, clona este repositorio para agregar el código del algoritmo *Follow the Gap* y los mapas personalizados:
+En la misma carpeta `src` de tu workspace, clona este repositorio para agregar el algoritmo *Follow the Gap* y los mapas personalizados:
 ```bash
 cd ~/f1tenth_ws/src
-git clone https://github.com/tu_usuario/Follow-the-gap-Avoid-obstacle---F1_YP.git
+git clone https://github.com/yancrist42/Follow-the-gap-Avoid-obstacle---F1_YP.git
 ```
 
 ### 3.4. Configurar el Mapa Personalizado
-Para que el simulador reconozca los obstáculos, debemos trasladar los mapas al paquete principal:
-1. Copia los archivos del circuito de Catalunya mediante la terminal:
-   ```bash
-   cp ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/maps/Catalunya* ~/f1tenth_ws/src/f1tenth_gym_ros/maps/
-   ```
-2. Edita el archivo de configuración del simulador para que cargue la nueva pista. Abre `~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml` y cambia la ruta de `map_path` a la siguiente:
-   ```yaml
-   map_path: '/home/TU_USUARIO/f1tenth_ws/src/f1tenth_gym_ros/maps/Catalunya_Obstacle'
-   ```
-   *(Asegúrate de reemplazar `TU_USUARIO` por tu nombre de usuario de Ubuntu. No incluyas las extensiones .png o .yaml al final de la ruta).*
+Traslada los archivos del circuito de Catalunya al paquete del simulador y actualiza automáticamente la ruta en `sim.yaml`:
 
-### 3.5. Instalar Dependencias y Compilar
-Regresa a la raíz de tu espacio de trabajo, resuelve las dependencias de ROS 2 y compila el entorno:
 ```bash
+# 1. Copiar los archivos del mapa (.png y .yaml)
+cp ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/maps/Catalunya* ~/f1tenth_ws/src/f1tenth_gym_ros/maps/
+
+# 2. Configurar automáticamente map_path y la extensión .png en sim.yaml
+sed -i "s|map_path:.*|map_path: '/home/$USER/f1tenth_ws/src/f1tenth_gym_ros/maps/Catalunya_Obstacle'|g" ~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml
+sed -i "s|map_img_ext:.*|map_img_ext: '.png'|g" ~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml
+```
+*(Verifica opcionalmente que en `sim.yaml` las coordenadas iniciales `sx` y `sy` correspondan a una zona despejada de la pista).*
+
+### 3.5. Instalar Dependencias de ROS 2 y Compilar
+Regresa a la raíz de tu espacio de trabajo, instala las dependencias omitiendo la clave obsoleta `python-transforms3d-pip` (ya instalada vía `pip` en el paso 3.2) y compila:
+
+```bash
+source /opt/ros/humble/setup.bash
 cd ~/f1tenth_ws
-rosdep install -i --from-path src --rosdistro humble -y
+rosdep install -i --from-path src --rosdistro humble --skip-keys python-transforms3d-pip -y
 colcon build --symlink-install
 source install/setup.bash
 ```
 
 ### 3.6. Ejecución de la Simulación
-Primero, lanza el entorno gráfico. Esto abrirá RViz mostrando la pista y los muros físicos:
-```bash
-ros2 launch f1tenth_gym_ros gym_bridge_launch.py
-```
+1. **Terminal 1 (Simulador y RViz):** Lanza el entorno gráfico y el puente de físicas:
+   ```bash
+   source /opt/ros/humble/setup.bash
+   source ~/f1tenth_ws/install/setup.bash
+   ros2 launch f1tenth_gym_ros gym_bridge_launch.py
+   ```
+2. **Terminal 2 (Controlador Reactivo):** Abre una nueva terminal, carga el entorno y ejecuta el nodo:
+   ```bash
+   source /opt/ros/humble/setup.bash
+   source ~/f1tenth_ws/install/setup.bash
+   ros2 run controllers gap_node
+   ```
+   *(Alternativamente, puedes ejecutarlo directamente con `python3 ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/src/controllers/controllers/gap_node.py`)*.
 
-Abre una **nueva terminal** (dejando la anterior en ejecución), carga las variables de entorno de ROS 2 y ejecuta el controlador reactivo:
-```bash
-source ~/f1tenth_ws/install/setup.bash
-cd ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/src/controllers/controllers
-python3 gap_node.py
-```
 Verás que el vehículo comienza a procesar los datos del escáner láser, esquivando los obstáculos de la pista, mientras la terminal imprime los tiempos limpios de cada vuelta completada.
 
 ---
 
-## 📊 4. Parámetros de Calibración Clave (Tuning)
+## 4. Parámetros de Calibración Clave (Tuning)
 
 Si deseas probar el controlador en otras pistas o modificar la agresividad de la conducción, puedes ajustar las siguientes variables críticas directamente dentro del script `gap_node.py`:
 
