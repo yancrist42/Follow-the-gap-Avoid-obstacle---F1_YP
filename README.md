@@ -4,7 +4,6 @@ Este repositorio contiene una implementación avanzada del algoritmo clásico **
 
 El sistema combina navegación reactiva basada en LiDAR con un perfil de velocidad tipo *Trail Braking* y un módulo integrado de telemetría por odometría para el registro automático de tiempos por vuelta. Además, incluye mapas personalizados (Circuito de Catalunya) con obstáculos estáticos para poner a prueba la evasión de colisiones y el tiempo de reacción.
 
-*(Arrastra y suelta aquí un GIF o video corto de tu simulación funcionando)*
 
 ## 1. Arquitectura de Control y Enfoque Teórico
 
