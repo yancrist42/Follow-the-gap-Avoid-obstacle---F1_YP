@@ -90,6 +90,9 @@ cp ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/maps/Catalunya* ~/f1te
 # 2. Configurar automáticamente map_path y la extensión .png en sim.yaml
 sed -i "s|map_path:.*|map_path: '/home/$USER/f1tenth_ws/src/f1tenth_gym_ros/maps/Catalunya_map'|g" ~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml
 sed -i "s|map_img_ext:.*|map_img_ext: '.png'|g" ~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml
+
+# 3. Edita el parametro scan_distance_to_base_link para tener la configuracion en las distancias del vehiculo
+sed -i "s|scan_distance_to_base_link:.*|scan_distance_to_base_link: 0.0|g" ~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml
 ```
 *(Nota: Si al iniciar la simulación el vehículo aparece fuera de la pista, ajusta las coordenadas iniciales `sx`, `sy` y `stheta` dentro de `~/f1tenth_ws/src/f1tenth_gym_ros/config/sim.yaml`).*
 
