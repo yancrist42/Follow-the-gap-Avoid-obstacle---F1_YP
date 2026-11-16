@@ -77,6 +77,8 @@ En la misma carpeta `src` de tu workspace, clona este repositorio para agregar e
 cd ~/f1tenth_ws/src
 git clone https://github.com/yancrist42/Follow-the-gap-Avoid-obstacle---F1_YP.git
 ```
+[Screencast from 11-15-2026 06:31:49 PM.webm](https://github.com/user-attachments/assets/6161680b-c2ff-490c-8acb-20bdaef17989)
+
 
 ### 3.4. Configurar el Mapa Personalizado
 Traslada los archivos del circuito de Catalunya al paquete del simulador y actualiza automáticamente la ruta y el formato de imagen en `sim.yaml`:
@@ -101,6 +103,7 @@ rosdep install -i --from-path src --rosdistro humble --skip-keys python-transfor
 colcon build --symlink-install
 source install/setup.bash
 ```
+[Screencast from 11-15-2026 06:35:03 PM.webm](https://github.com/user-attachments/assets/a5f99bb4-b104-4500-a36a-f7f37e8d1f12)
 
 ### 3.6. Ejecución de la Simulación
 
@@ -115,10 +118,10 @@ source install/setup.bash
    ```bash
    source /opt/ros/humble/setup.bash
    source ~/f1tenth_ws/install/setup.bash
-   ros2 run controllers gap_node
+   python3 ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/src/controllers/controllers/gap_node.py
    ```
-   *(Alternativamente, puedes ejecutarlo directamente con `python3 ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/src/controllers/controllers/gap_node.py`)*.
-
+https://youtu.be/-MU0UabO3GE
+   
 Verás que el vehículo comienza a procesar los datos del escáner láser, esquivando los obstáculos de la pista, mientras la terminal imprime los tiempos limpios de cada vuelta completada.
 
 ### 3.7. Solución de Problemas Comunes (Troubleshooting)
