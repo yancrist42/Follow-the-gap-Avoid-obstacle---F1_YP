@@ -64,6 +64,10 @@ source /opt/ros/humble/setup.bash
 source ~/f1tenth_ws/install/local_setup.bash
 ros2 launch f1tenth_gym_ros gym_bridge_launch.py
 ```
+> **Nota visual en RViz (modo 2 agentes):** Aunque configures `num_agent: 2` en `sim.yaml`, RViz por defecto solo dibuja el modelo 3D del vehículo principal (`ego_racecar`), por lo que el segundo vehículo (`opp_racecar`) aparecerá inicialmente solo como el contorno de puntos de su carrocería en el `LaserScan`. Para visualizar también el modelo 3D del oponente en RViz:
+> 1. En el panel izquierdo (**Displays**), haz clic en **Add** y selecciona **RobotModel**.
+> 2. Despliega el nuevo **RobotModel** agregado y cambia su propiedad **Description Topic** a `/opp_robot_description` (o `/opp_racecar/robot_description`).
+> 3. *(Opcional)* Guarda la configuración desde **File -> Save Config**.
 
 #### Paso 3.2 — Ejecutar el agente principal (`EGO`)
 
