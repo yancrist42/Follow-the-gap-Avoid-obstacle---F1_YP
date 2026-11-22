@@ -68,7 +68,7 @@ ros2 launch f1tenth_gym_ros gym_bridge_launch.py
 En otra terminal o sesión de `tmux`, lanza el nodo para el vehículo `EGO`:
 
 ```bash
-python3 ~/F1Tenth-Repository/src/controllers/controllers/obstacle_node.py --ros-args \
+python3 ~/f1tenth_ws/src/controllers/controllers/obstacle_node.py --ros-args \
   -r __node:=ego_gap_node \
   -p max_speed:=16.0 \
   -p car_label:=EGO
@@ -79,7 +79,7 @@ python3 ~/F1Tenth-Repository/src/controllers/controllers/obstacle_node.py --ros-
 En una tercera terminal o sesión de `tmux`, lanza el nodo para el oponente `OPP` remapeando sus tópicos de LIDAR, conducción y odometría:
 
 ```bash
-python3 ~/F1Tenth-Repository/src/controllers/controllers/obstacle_node.py --ros-args \
+python3 ~/f1tenth_ws/src/controllers/controllers/obstacle_node.py --ros-args \
   -r __node:=opp_gap_node \
   -r /scan:=/opp_scan \
   -r /drive:=/opp_drive \
