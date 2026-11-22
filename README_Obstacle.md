@@ -32,28 +32,30 @@ En la carpeta `controller` conviven `gap_node` y el nodo de evasión/rebase (`ob
 
 ## Instrucciones de ejecución
 
-Asumiendo que ROS 2, `f1tenth_gym`, `f1tenth_gym_ros` y el entorno de simulación ya están instalados y compilados según el `README.md` principal, sigue estos pasos para ejecutar este nodo en escenarios de obstáculos o dos agentes:
+Asumiendo que ROS 2, `f1tenth_gym`, `f1tenth_gym_ros` y el entorno de simulación ya están instalados y compilados según el `README.md` principal, sigue estos pasos para ejecutar este nodo en escenarios con obstáculos o con dos agentes en pista.
 
 ### 1. Modificaciones en `sim.yaml` y mapas
 Edita `f1tenth_gym_ros/config/sim.yaml` según el escenario que quieras probar:
 
-* **Cambiar de mapa (`map_path`):** Apunta `map_path` al mapa correspondiente en el repositorio/contenedor, ya sea el mapa normal o el mapa con obstáculos **`Catalunya_Obstacle`** (siguiendo la convención de ruta completa del mapa en el contenedor).
-* **Configurar uno o dos agentes (`num_agent`):** Ajusta `num_agent` a `1` (un agente, por ejemplo sobre el mapa `Catalunya_Obstacle`) o a `2` (dos agentes para pruebas de rebase en pista).
-* **Revisar posiciones iniciales y tópicos:** Verifica las poses iniciales (`ego` / `opponent`) en `sim.yaml` si es necesario. Ten en cuenta que con `num_agent: 2` el simulador publica `/scan`, `/ego_racecar/odom`, `/opp_scan` y `/opp_racecar/odom`, y suscribe a `/drive` y `/opp_drive` (si usas un segundo agente, también requiere publicar en `/opp_drive` para que ambos vehículos avancen).
+* **Cambiar de mapa (`map_path`):** Apunta `map_path` al mapa deseado, ya sea el mapa normal o el mapa con obstáculos **`Catalunya_Obstacle`** (usando la ruta correspondiente en el entorno o contenedor).
+* **Configurar uno o dos agentes (`num_agent`):** Cambia `num_agent` a `1` (un solo agente, por ejemplo sobre `Catalunya_Obstacle`) o a `2` (dos agentes para pruebas de rebase).
+* **Verificar poses y tópicos:** Revisa las poses iniciales (`ego` / `opponent`) si lo requieres. Con dos agentes, el simulador publica `/scan`, `/ego_racecar/odom`, `/opp_scan` y `/opp_racecar/odom`, y suscribe a `/drive` y `/opp_drive` (es necesario publicar en ambos tópicos de conducción para que ambos vehículos se muevan).
 
-### 2. Modificaciones en el nodo y recompilación
-* Coloca o actualiza `obstacle_node.py` dentro de la carpeta `controller` de tu paquete en el espacio de trabajo, y ajusta parámetros como `max_speed`, `self.bubble_radius` o el límite de distancia en `preprocess_lidar` si deseas afinar el rebase.
-* Recompila y vuelve a cargar el entorno del espacio de trabajo tras modificar `sim.yaml` o el código:
+### 2. Modificaciones en el nodo y compilación
+* Mantén o actualiza `obstacle_node.py` dentro de la carpeta `controller` (`~/F1Tenth-Repository/src/controllers/controllers/obstacle_node.py`), ajustando parámetros como `max_speed`, `self.bubble_radius` o el recorte de distancia en `preprocess_lidar` si deseas afinar la conducción o el rebase.
+* Si modificas `sim.yaml` o paquetes de ROS 2, recompila y vuelve a cargar el entorno:
 
 ```bash
-cd /sim_ws
+source /opt/ros/foxy/setup.bash
 colcon build
 source install/setup.bash
 ```
 
-### 3. Lanzar la simulación y ejecutar el nodo
+### 3. Lanzar la simulación y los nodos
 
-1. En una terminal (o sesión de `tmux`), arranca el puente de simulación:
+#### Paso 3.1 — Iniciar la simulación
+
+En una terminal (o sesión de `tmux`), arranca el entorno de simulación:
 
 ```bash
 source /opt/ros/foxy/setup.bash
@@ -61,18 +63,29 @@ source install/local_setup.bash
 ros2 launch f1tenth_gym_ros gym_bridge_launch.py
 ```
 
-2. En otra terminal o sesión de `tmux`, ejecuta el nodo desde tu paquete:
+#### Paso 3.2 — Ejecutar el agente principal (`EGO`)
+
+En otra terminal o sesión de `tmux`, lanza el nodo para el vehículo `EGO`:
 
 ```bash
-source /opt/ros/foxy/setup.bash
-source install/local_setup.bash
-ros2 run <tu_paquete> <tu_ejecutable>
+python3 ~/F1Tenth-Repository/src/controllers/controllers/obstacle_node.py --ros-args \
+  -r __node:=ego_gap_node \
+  -p max_speed:=16.0 \
+  -p car_label:=EGO
 ```
 
-También puedes pasar parámetros por línea de comandos al arrancar:
+#### Paso 3.3 — Ejecutar el segundo agente (`OPP`) *(solo con `num_agent: 2`)*
+
+En una tercera terminal o sesión de `tmux`, lanza el nodo para el oponente `OPP` remapeando sus tópicos de LIDAR, conducción y odometría:
 
 ```bash
-ros2 run <tu_paquete> <tu_ejecutable> --ros-args -p max_speed:=10.0 -p car_label:='EGO'
+python3 ~/F1Tenth-Repository/src/controllers/controllers/obstacle_node.py --ros-args \
+  -r __node:=opp_gap_node \
+  -r /scan:=/opp_scan \
+  -r /drive:=/opp_drive \
+  -r /ego_racecar/odom:=/opp_racecar/odom \
+  -p max_speed:=4.0 \
+  -p car_label:=OPP
 ```
 
-Para detener el nodo de forma limpia y mostrar el cierre de telemetría, presiona `Ctrl + C`.
+Para detener cualquiera de los nodos de forma limpia y mostrar el mensaje de cierre de telemetría, presiona `Ctrl + C` en su terminal.
