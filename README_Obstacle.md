@@ -55,7 +55,7 @@ source install/setup.bash
 
 #### Paso 3.1 — Iniciar la simulación
 
-En una terminal (o sesión de `tmux`), arranca el entorno de simulación:
+En una terminal, arranca el entorno de simulación:
 
 ```bash
 source /opt/ros/foxy/setup.bash
@@ -65,9 +65,12 @@ ros2 launch f1tenth_gym_ros gym_bridge_launch.py
 
 #### Paso 3.2 — Ejecutar el agente principal (`EGO`)
 
-En otra terminal o sesión de `tmux`, lanza el nodo para el vehículo `EGO`:
+En otra terminal, lanza el nodo para el vehículo `EGO`:
 
 ```bash
+source /opt/ros/foxy/setup.bash
+source ~/f1tenth_ws/install/setup.bash
+
 python3 ~/f1tenth_ws/src/controllers/controllers/obstacle_node.py --ros-args \
   -r __node:=ego_gap_node \
   -p max_speed:=16.0 \
@@ -76,9 +79,12 @@ python3 ~/f1tenth_ws/src/controllers/controllers/obstacle_node.py --ros-args \
 
 #### Paso 3.3 — Ejecutar el segundo agente (`OPP`) *(solo con `num_agent: 2`)*
 
-En una tercera terminal o sesión de `tmux`, lanza el nodo para el oponente `OPP` remapeando sus tópicos de LIDAR, conducción y odometría:
+En una tercera terminal, lanza el nodo para el oponente `OPP` remapeando sus tópicos de LIDAR, conducción y odometría:
 
 ```bash
+source /opt/ros/foxy/setup.bash
+source ~/f1tenth_ws/install/setup.bash
+
 python3 ~/f1tenth_ws/src/controllers/controllers/obstacle_node.py --ros-args \
   -r __node:=opp_gap_node \
   -r /scan:=/opp_scan \
