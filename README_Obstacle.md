@@ -61,7 +61,7 @@ En una terminal, arranca el entorno de simulación:
 
 ```bash
 source /opt/ros/humble/setup.bash
-source install/local_setup.bash
+source ~/f1tenth_ws/install/local_setup.bash
 ros2 launch f1tenth_gym_ros gym_bridge_launch.py
 ```
 
@@ -73,7 +73,7 @@ En otra terminal, lanza el nodo para el vehículo `EGO`:
 source /opt/ros/humble/setup.bash
 source ~/f1tenth_ws/install/setup.bash
 
-python3 ~/f1tenth_ws/src/controllers/controllers/obstacle_node.py --ros-args \
+python3 ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/src/controllers/controllers/obstacle_node.py --ros-args \
   -r __node:=ego_gap_node \
   -p max_speed:=16.0 \
   -p car_label:=EGO
@@ -87,7 +87,7 @@ En una tercera terminal, lanza el nodo para el oponente `OPP` remapeando sus tó
 source /opt/ros/humble/setup.bash
 source ~/f1tenth_ws/install/setup.bash
 
-python3 ~/f1tenth_ws/src/controllers/controllers/obstacle_node.py --ros-args \
+python3 ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/src/controllers/controllers/obstacle_node.py --ros-args \
   -r __node:=opp_gap_node \
   -r /scan:=/opp_scan \
   -r /drive:=/opp_drive \
