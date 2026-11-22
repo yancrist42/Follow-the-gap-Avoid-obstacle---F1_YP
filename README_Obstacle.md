@@ -1,4 +1,4 @@
-# README — Nodo `ReactiveFollowGap` (`obstacle_node.py`) y Rebase en Pista
+# README — Nodo `ReactiveFollowGap` (`obstacle_node.py`)
 
 Documentación complementaria para el repositorio (junto al `README.md` base de `f1tenth_gym_ros`) sobre el nodo `ReactiveFollowGap` (`obstacle_node.py`), ubicado en la carpeta `controller` junto a `gap_node`.
 
