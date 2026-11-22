@@ -100,5 +100,7 @@ python3 ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/src/controllers/c
   -p max_speed:=4.0 \
   -p car_label:=OPP
 ```
+https://youtu.be/aJ9S07VAKsQ
+
 
 Para detener cualquiera de los nodos de forma limpia y mostrar el mensaje de cierre de telemetría, presiona `Ctrl + C` en su terminal.
