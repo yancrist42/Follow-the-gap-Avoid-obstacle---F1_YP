@@ -60,6 +60,7 @@ source install/setup.bash
 En una terminal, arranca el entorno de simulación:
 
 ```bash
+cd ~/f1tenth_ws
 source /opt/ros/humble/setup.bash
 source ~/f1tenth_ws/install/local_setup.bash
 ros2 launch f1tenth_gym_ros gym_bridge_launch.py
