@@ -48,7 +48,7 @@ Edita `f1tenth_gym_ros/config/sim.yaml` según el escenario que quieras probar:
 * Si modificas `sim.yaml` o paquetes de ROS 2, recompila y vuelve a cargar el entorno:
 
 ```bash
-source /opt/ros/foxy/setup.bash
+source /opt/ros/humble/setup.bash
 colcon build
 source install/setup.bash
 ```
@@ -60,7 +60,7 @@ source install/setup.bash
 En una terminal, arranca el entorno de simulación:
 
 ```bash
-source /opt/ros/foxy/setup.bash
+source /opt/ros/humble/setup.bash
 source install/local_setup.bash
 ros2 launch f1tenth_gym_ros gym_bridge_launch.py
 ```
@@ -70,7 +70,7 @@ ros2 launch f1tenth_gym_ros gym_bridge_launch.py
 En otra terminal, lanza el nodo para el vehículo `EGO`:
 
 ```bash
-source /opt/ros/foxy/setup.bash
+source /opt/ros/humble/setup.bash
 source ~/f1tenth_ws/install/setup.bash
 
 python3 ~/f1tenth_ws/src/controllers/controllers/obstacle_node.py --ros-args \
@@ -84,7 +84,7 @@ python3 ~/f1tenth_ws/src/controllers/controllers/obstacle_node.py --ros-args \
 En una tercera terminal, lanza el nodo para el oponente `OPP` remapeando sus tópicos de LIDAR, conducción y odometría:
 
 ```bash
-source /opt/ros/foxy/setup.bash
+source /opt/ros/humble/setup.bash
 source ~/f1tenth_ws/install/setup.bash
 
 python3 ~/f1tenth_ws/src/controllers/controllers/obstacle_node.py --ros-args \
