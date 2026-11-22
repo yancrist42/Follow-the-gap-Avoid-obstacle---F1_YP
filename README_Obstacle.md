@@ -40,6 +40,7 @@ Edita `f1tenth_gym_ros/config/sim.yaml` según el escenario que quieras probar:
 * **Cambiar de mapa (`map_path`):** Apunta `map_path` al mapa deseado, ya sea el mapa normal o el mapa con obstáculos **`Catalunya_Obstacle`** (usando la ruta correspondiente en el entorno o contenedor).
 * **Configurar uno o dos agentes (`num_agent`):** Cambia `num_agent` a `1` (un solo agente, por ejemplo sobre `Catalunya_Obstacle`) o a `2` (dos agentes para pruebas de rebase).
 * **Verificar poses y tópicos:** Revisa las poses iniciales (`ego` / `opponent`) si lo requieres. Con dos agentes, el simulador publica `/scan`, `/ego_racecar/odom`, `/opp_scan` y `/opp_racecar/odom`, y suscribe a `/drive` y `/opp_drive` (es necesario publicar en ambos tópicos de conducción para que ambos vehículos se muevan).
+[Screencast from 11-22-2026 12:02:12 PM.webm](https://github.com/user-attachments/assets/a924139d-6b75-4790-9941-ca0188ce2825)
 
 ### 2. Modificaciones en el nodo y compilación
 * Mantén o actualiza `obstacle_node.py` dentro de la carpeta `controller` (`~/f1tenth_ws/src/controllers/controllers/obstacle_node.py`), ajustando parámetros como `max_speed`, `self.bubble_radius` o el recorte de distancia en `preprocess_lidar` si deseas afinar la conducción o el rebase.
