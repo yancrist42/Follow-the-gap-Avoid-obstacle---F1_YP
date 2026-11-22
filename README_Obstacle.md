@@ -42,7 +42,7 @@ Edita `f1tenth_gym_ros/config/sim.yaml` según el escenario que quieras probar:
 * **Verificar poses y tópicos:** Revisa las poses iniciales (`ego` / `opponent`) si lo requieres. Con dos agentes, el simulador publica `/scan`, `/ego_racecar/odom`, `/opp_scan` y `/opp_racecar/odom`, y suscribe a `/drive` y `/opp_drive` (es necesario publicar en ambos tópicos de conducción para que ambos vehículos se muevan).
 
 ### 2. Modificaciones en el nodo y compilación
-* Mantén o actualiza `obstacle_node.py` dentro de la carpeta `controller` (`~/F1Tenth-Repository/src/controllers/controllers/obstacle_node.py`), ajustando parámetros como `max_speed`, `self.bubble_radius` o el recorte de distancia en `preprocess_lidar` si deseas afinar la conducción o el rebase.
+* Mantén o actualiza `obstacle_node.py` dentro de la carpeta `controller` (`~/f1tenth_ws/src/controllers/controllers/obstacle_node.py`), ajustando parámetros como `max_speed`, `self.bubble_radius` o el recorte de distancia en `preprocess_lidar` si deseas afinar la conducción o el rebase.
 * Si modificas `sim.yaml` o paquetes de ROS 2, recompila y vuelve a cargar el entorno:
 
 ```bash
