@@ -100,6 +100,8 @@ python3 ~/f1tenth_ws/src/Follow-the-gap-Avoid-obstacle---F1_YP/src/controllers/c
   -p max_speed:=4.0 \
   -p car_label:=OPP
 ```
+
+Link de excel con valores ros gab https://drive.google.com/file/d/1XI3qqJkJISjag6Wb8UnnYU8yFjsih1Ks/view?usp=drive_link
 https://youtu.be/aJ9S07VAKsQ
 
 
