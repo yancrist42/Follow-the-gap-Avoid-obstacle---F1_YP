@@ -144,3 +144,7 @@ If you want to test the controller on other tracks or modify driving aggressiven
 | **`np.clip` (LiDAR)** | `3.9 m` | Maximum vision distance to prevent *corner-cutting* and force the car to stay centered. |
 | **Straight Speed** | `14.0 m/s` | Maximum speed on long straights with clear traction. The system steps it down automatically using *Trail Braking*. |
 | **Field of View** | `±70°` | Useful opening angle of the LiDAR. Ignores side and rear walls to prevent erratic steering decisions. |
+
+
+Link of excel sheet for ros bag:
+https://drive.google.com/file/d/1_EJ_xP-l7UVr-FJKIuDuV1RTgYB_k-qN/view?usp=drive_link
