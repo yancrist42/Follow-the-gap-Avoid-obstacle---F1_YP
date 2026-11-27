@@ -104,6 +104,9 @@ https://youtu.be/aJ9S07VAKsQ
 
 To stop any of the nodes cleanly and display the closing telemetry summary, press `Ctrl + C` in its respective terminal.
 
+#### Simulation on 10 lap
+
+https://youtu.be/t67WpUb8Ycg
 
 ### 4. Recorded Data
 
