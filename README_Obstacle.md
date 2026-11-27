@@ -105,7 +105,7 @@ https://youtu.be/aJ9S07VAKsQ
 
 Para detener cualquiera de los nodos de forma limpia y mostrar el mensaje de cierre de telemetría, presiona `Ctrl + C` en su terminal.
 
-#### Ejecucion de simulacion de 10 vueltas seguidas
+#### 3,4 Ejecucion de simulacion de 10 vueltas seguidas
 
 https://youtu.be/t67WpUb8Ycg
 
