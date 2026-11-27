@@ -126,6 +126,10 @@ https://youtu.be/-MU0UabO3GE
    
 Verás que el vehículo comienza a procesar los datos del escáner láser, esquivando los obstáculos de la pista, mientras la terminal imprime los tiempos limpios de cada vuelta completada.
 
+### Ejecucion de 10 vueltas seguidas
+
+https://youtu.be/sevWEooKhg8
+
 ### 3.7. Solución de Problemas Comunes (Troubleshooting)
 * **Error al lanzar `gym_bridge_launch.py` relacionado con `coverage`:** En algunas instalaciones de Ubuntu 22.04 la librería `coverage` genera conflicto con el entorno de simulación. Si ocurre, desinstálala y recompila:
   ```bash
