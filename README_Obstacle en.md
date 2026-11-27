@@ -106,7 +106,7 @@ To stop any of the nodes cleanly and display the closing telemetry summary, pres
 
 #### Simulation on 10 lap
 
-https://youtu.be/t67WpUb8Ycg
+https://youtu.be/7FbAcX7UaMs
 
 ### 4. Recorded Data
 
