@@ -125,6 +125,10 @@ https://youtu.be/-MU0UabO3GE
    
 You will see the vehicle begin processing laser scanner data and dodging track obstacles while the terminal prints clean lap times for each completed lap.
 
+### 3.6.1 Simulation on 10 lap
+
+https://youtu.be/sevWEooKhg8
+
 ### 3.7. Common Troubleshooting
 * **Error launching `gym_bridge_launch.py` related to `coverage`:** On some Ubuntu 22.04 installations, the `coverage` library conflicts with the simulation environment. If this occurs, uninstall it and rebuild:
   ```bash
